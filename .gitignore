@@ -1,0 +1,3 @@
+*.csv
+# Ignore specific folders
+week_01/02_docker_sql/ny_taxi_postgres_data
