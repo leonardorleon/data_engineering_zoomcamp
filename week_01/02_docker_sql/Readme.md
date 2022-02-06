@@ -8,6 +8,7 @@ This section is a simple introduction/review of Docker and SQL. The goal is to s
   - [Running pgAdmin and linking docker containers](#running-pgadmin-and-linking-docker-containers)
     - [Creating a docker network](#creating-a-docker-network)
 - [Docker-compose and ingestion script](#docker-compose-and-ingestion-script)
+  - [dockerizing the ingestion script](#dockerizing-the-ingestion-script)
 
 # Setting up postgres and pgAdmin
 
@@ -88,7 +89,7 @@ docker run -it \
 
 # Docker-compose and ingestion script
 
-For the ingestion script, the code from the notebook was cleaned up to use paramters in [ingest_data.py](ingest_data.py). Simply run by:
+For the ingestion script, the code from the notebook was cleaned up to use paramters in [dockerfiles/ingest_data.py](ingest_data.py). Simply run by:
 
 Note: for simplicity we are passing passwords directly, but it should be done by environment variables in a real use case.
 
@@ -103,4 +104,25 @@ python3 ingest_data.py \
   --db=ny_taxi \
   --table_name=yellow_taxi_trips \
   --url=${URL}
+```
+
+## dockerizing the ingestion script
+
+The requirements for the ingestion script were put in the [Dockerfile](dockerfiles/Dockerfile) and then it's just a matter of building the container with the parameters needed for ingestion
+
+```bash
+docker build -t taxi_ingest:v001 .
+```
+
+```bash
+docker run -it \
+  --network=pg-network \
+  taxi_ingest:v001 \
+    --user=root \
+    --password=root \
+    --host=pg-database \
+    --port=5432 \
+    --db=ny_taxi \
+    --table_name=yellow_taxi_trips \
+    --url=${URL}
 ```
