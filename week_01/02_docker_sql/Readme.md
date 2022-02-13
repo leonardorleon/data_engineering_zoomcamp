@@ -10,6 +10,7 @@ This section is a simple introduction/review of Docker and SQL. The goal is to s
 - [Docker-compose and ingestion script](#docker-compose-and-ingestion-script)
   - [dockerizing the ingestion script](#dockerizing-the-ingestion-script)
   - [configuring everything with docker compose](#configuring-everything-with-docker-compose)
+- [SQL refresher](#sql-refresher)
 
 # Setting up postgres and pgAdmin
 
@@ -131,3 +132,109 @@ docker run -it \
 ## configuring everything with docker compose
 
 Instead of using long commands to ser up our containers and network between them, we can use a simple docker-compose file, which takes all the configuration from various containers and since they are together as services, they automatically share a network. The file can be found [here](dockerfiles/docker-compose.yaml)
+
+# SQL refresher
+
+For the refresher, we added a new table to the database, coming from:
+
+https://s3.amazonaws.com/nyc-tlc/misc/taxi+_zone_lookup.csv
+
+A Few query examples follow:
+
+Two ways to write inner join. We only get records where both tables match.
+
+```SQL
+SELECT
+	t.tpep_pickup_datetime,
+	t.tpep_dropoff_datetime,
+	t.total_amount,
+	CONCAT(zpu."Borough" , ' / ' , zpu."Zone") AS "pickup_loc",
+	CONCAT(zdo."Borough" , ' / ' , zdo."Zone") AS "dropoff_loc"
+FROM
+	yellow_taxi_trips AS t,
+	ny_taxi_zones AS zpu,
+	ny_taxi_zones AS zdo
+WHERE
+	t."PULocationID" = zpu."LocationID" AND
+	t."DOLocationID" = zdo."LocationID"
+LIMIT 100;
+``` 
+
+```SQL
+SELECT
+	t.tpep_pickup_datetime,
+	t.tpep_dropoff_datetime,
+	t.total_amount,
+	t."PULocationID",
+	t."DOLocationID",
+	CONCAT(zpu."Borough",' / ', zpu."Zone") AS pickup_loc,
+	CONCAT(zdo."Borough",' / ', zdo."Zone") AS dropoff_loc
+FROM
+	yellow_taxi_trips AS t JOIN ny_taxi_zones AS zpu
+		ON t."PULocationID" = zpu."LocationID"
+	JOIN ny_taxi_zones AS zdo
+		ON t."DOLocationID" = zdo."LocationID" 
+LIMIT 100;
+```
+
+Example of left join, which is basically the same in terms of writing the query but if there are records on left table that are not in right table, they still show with. The opposite is true for right join, if we have records in our right table but not in the left table, we still get the record with the info from the right table. 
+```SQL
+SELECT
+	t.tpep_pickup_datetime,
+	t.tpep_dropoff_datetime,
+	t.total_amount,
+	t."PULocationID",
+	t."DOLocationID",
+	CONCAT(zpu."Borough",' / ', zpu."Zone") AS pickup_loc,
+	CONCAT(zdo."Borough",' / ', zdo."Zone") AS dropoff_loc
+FROM
+	yellow_taxi_trips AS t LEFT JOIN ny_taxi_zones AS zpu
+		ON t."PULocationID" = zpu."LocationID"
+	LEFT JOIN ny_taxi_zones AS zdo
+		ON t."DOLocationID" = zdo."LocationID" 
+LIMIT 100;
+```
+
+Examples of group by:
+
+```SQL
+SELECT
+	CAST(t.tpep_dropoff_datetime AS DATE) AS "day",
+	COUNT(1) as "count"
+FROM
+	yellow_taxi_trips AS t
+GROUP BY
+	CAST(t.tpep_dropoff_datetime AS DATE)
+ORDER BY "count" DESC;
+```
+
+```SQL
+SELECT
+	CAST(t.tpep_dropoff_datetime AS DATE) AS "day",
+	"DOLocationID",
+	COUNT(1) as "count",
+	MAX(total_amount) as "total_amount",
+	MAX(passenger_count) as "passenger_count"
+FROM
+	yellow_taxi_trips AS t
+GROUP BY
+	1, 2
+ORDER BY 
+	"day" ASC,
+	"DOLocationID" ASC;
+```
+
+```SQL
+SELECT
+	zdo."Borough" as "dropoff_borough",
+	zdo."Zone" as "dropoff_zone",
+	COUNT(1) AS "count"
+FROM
+	yellow_taxi_trips AS t LEFT JOIN ny_taxi_zones AS zdo
+		ON t."DOLocationID" = zdo."LocationID"
+GROUP BY
+	"dropoff_borough",
+	"dropoff_zone"
+ORDER BY
+	"count" DESC;
+```
