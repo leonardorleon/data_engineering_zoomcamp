@@ -9,6 +9,7 @@ This section is a simple introduction/review of Docker and SQL. The goal is to s
     - [Creating a docker network](#creating-a-docker-network)
 - [Docker-compose and ingestion script](#docker-compose-and-ingestion-script)
   - [dockerizing the ingestion script](#dockerizing-the-ingestion-script)
+  - [configuring everything with docker compose](#configuring-everything-with-docker-compose)
 
 # Setting up postgres and pgAdmin
 
@@ -126,3 +127,7 @@ docker run -it \
     --table_name=yellow_taxi_trips \
     --url=${URL}
 ```
+
+## configuring everything with docker compose
+
+Instead of using long commands to ser up our containers and network between them, we can use a simple docker-compose file, which takes all the configuration from various containers and since they are together as services, they automatically share a network. The file can be found [here](dockerfiles/docker-compose.yaml)
