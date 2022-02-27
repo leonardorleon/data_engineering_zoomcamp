@@ -1,0 +1,80 @@
+# Terraform <!-- omit in toc -->
+
+Terraform is an open-source tool used for provisioning infrastructure resources. 
+
+- [First steps](#first-steps)
+  - [Creating an infrastructure for the project using Terraform](#creating-an-infrastructure-for-the-project-using-terraform)
+  - [Setting up permissions for service account](#setting-up-permissions-for-service-account)
+  - [Enabling APIs for the project](#enabling-apis-for-the-project)
+- [Configuring Terraform](#configuring-terraform)
+  - [Declarations](#declarations)
+  - [Execution steps](#execution-steps)
+
+## First steps
+
+The first thing to do is to create a GCP project, followed by a service account and a key for said service account. After this, it needs to be exported to an environment variable (Ideally use a virtual environment for the project itself).
+
+For this, gcloud cli needs to be installed, and then set up the environment:
+```sh
+export GOOGLE_APPLICATION_CREDENTIALS="<path/to/service-account-keys>.json"
+
+# Refresh token and verify authentication
+gcloud auth application-defalut login
+```
+
+### Creating an infrastructure for the project using Terraform
+
+The project needs:
+
+* Google Cloud Storage (GCS): Data Lake
+* BigQuery: Data Warehouse
+
+### Setting up permissions for service account
+
+The service account needs certain roles and permissions to make changes in the project. For this it is necessary to add roles to the service account. Normally in production, you'd create customized roles with a more specific scope, but for simplicity, we will add:
+
+*  The "Storage Admin" role (for GCS permissions) and "Storage Object Admin" role (for permission to the objects in GCS).
+*  The "BigQuery Admin" role for the Data Lake.
+
+### Enabling APIs for the project
+
+These APIs need to be enabled to allow the communication betweeen local and cloud environment. One for IAM and one for IAM credentials.
+
+* https://console.cloud.google.com/apis/library/iam.googleapis.com
+* https://console.cloud.google.com/apis/library/iamcredentials.googleapis.com
+
+
+## Configuring Terraform
+
+The terraform configuration consists of the following files:
+
+* .terraform-version: To ensure compatibility
+* main.tf: Where we define the resources or providers terraform will use
+* variables.tf: Where we store variables that can be called inside main.tf
+
+### Declarations
+
+* `terraform`: configure basic Terraform settings to provision your infrastructure
+    * `required_version`: minimum Terraform version to apply to your configuration
+    * `backend`: stores Terraform's "state" snapshots, to map real-world resources to your configuration.
+        * `local`: stores state file locally as terraform.tfstate
+    * `required_providers`: specifies the providers required by the current module
+* `provider`:
+    * adds a set of resource types and/or data sources that Terraform can manage
+    * The Terraform Registry is the main directory of publicly available providers from most major infrastructure platforms.
+* `resource`
+    * blocks to define components of your infrastructure
+    * Project modules/resources: google_storage_bucket, google_bigquery_dataset, google_bigquery_table
+* `variable` & `locals`
+    * runtime arguments and constants
+
+### Execution steps
+
+1. `terraform init`: 
+    * Initializes & configures the backend, installs plugins/providers, & checks out an existing configuration from a version control 
+2. `terraform plan`:
+    * Matches/previews local changes against a remote state, and proposes an Execution Plan.
+3. `terraform apply`: 
+    * Asks for approval to the proposed plan, and applies changes to cloud
+4. `terraform destroy`
+    * Removes your stack from the Cloud (Recommended to avoid leaving resources on stand-by)

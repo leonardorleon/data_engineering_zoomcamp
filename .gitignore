@@ -1,4 +1,7 @@
 *.csv
+venv*
 # Ignore specific folders
 week_01/02_docker_sql/ny_taxi_postgres_data
 week_01/02_docker_sql/test_preparing_postgres_container.yml
+keys
+week_01/01_terraform/terraform/.terraform
