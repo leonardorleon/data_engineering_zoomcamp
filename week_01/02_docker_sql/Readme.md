@@ -131,7 +131,7 @@ docker run -it \
 
 ## configuring everything with docker compose
 
-Instead of using long commands to ser up our containers and network between them, we can use a simple docker-compose file, which takes all the configuration from various containers and since they are together as services, they automatically share a network. The file can be found [here](dockerfiles/docker-compose.yaml)
+Instead of using long commands to ser up our containers and network between them, we can use a simple docker-compose file, which takes all the configuration from various containers and since they are together as services, they automatically share a network. The file can be found [here](dockerfiles/docker-compose.yaml). Then it's just a matter of configuring the connection again, using the database service name as the connection point and the user and password that was set up in docer-compose.
 
 # SQL refresher
 
