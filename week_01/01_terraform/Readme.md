@@ -22,6 +22,28 @@ export GOOGLE_APPLICATION_CREDENTIALS="<path/to/service-account-keys>.json"
 gcloud auth application-defalut login
 ```
 
+**Side note:** The best way I've found to keep environment variables confined to specific environments while using conda is:
+
+```sh
+# Go to the environment folder and create the following directories:
+(my_environment)$ cd $CONDA_PREFIX
+(my_environment)$ mkdir -p ./etc/conda/activate.d
+(my_environment)$ mkdir -p ./etc/conda/deactivate.d
+# Then create the following files:
+(my_environment)$ touch ./etc/conda/activate.d/env_vars.sh
+(my_environment)$ touch ./etc/conda/deactivate.d/env_vars.sh
+# Inside the activate.d/env_vars.sh file export your env variables
+    #!/bin/sh
+
+    export MY_VARIABLE=some_value
+# Inside the deactivate.d/env_vars.sh file unset your env variables
+    #!/bin/sh
+
+    unset MY_VARIABLE
+
+# Now the variables will be available when the environment is active and they will be unset when it is not.
+```
+
 ### Creating an infrastructure for the project using Terraform
 
 The project needs:
