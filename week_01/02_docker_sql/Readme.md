@@ -70,7 +70,7 @@ docker run -it \
   -e POSTGRES_USER="root" \
   -e POSTGRES_PASSWORD="root" \
   -e POSTGRES_DB="ny_taxi" \
-  -v $(pwd)/ny_taxi_postgres_data:/var/lib/postgresql/data \
+  -v /$(pwd)/ny_taxi_postgres_data:/var/lib/postgresql/data \
   -p 5432:5432 \
   --network=pg-network \
   --name=pg-database \
@@ -96,9 +96,12 @@ For the ingestion script, the code from the notebook was cleaned up to use param
 Note: for simplicity we are passing passwords directly, but it should be done by environment variables in a real use case.
 
 ```bash
-URL="https://s3.amazonaws.com/nyc-tlc/trip+data/yellow_tripdata_2021-01.csv"
+#URL="https://s3.amazonaws.com/nyc-tlc/trip+data/yellow_tripdata_2021-01.csv"
 
-python3 ingest_data.py \
+# The url changed, since they moved the files to parquet format. But here is a backup
+URL="https://github.com/DataTalksClub/nyc-tlc-data/releases/download/yellow/yellow_tripdata_2021-01.csv.gz"
+
+python ingest_data.py \
   --user=root \
   --password=root \
   --host=localhost \

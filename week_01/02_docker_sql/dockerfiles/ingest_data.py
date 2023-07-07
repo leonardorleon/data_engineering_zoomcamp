@@ -1,8 +1,9 @@
-#!/usr/bin/env python
+
 # coding: utf-8
 
 import argparse
-import subprocess
+# import subprocess
+import os
 import pandas as pd
 from time import time
 from sqlalchemy import create_engine
@@ -15,12 +16,14 @@ def main(params):
     db = params.db
     table_name = params.table_name
     url = params.url
-    csv_name = "output.csv"
+    csv_name = "output.gz"  # File is now stored in a gzip 
 
     # download csv
-    subprocess.call(["wget", url, "-O", csv_name])
+    # subprocess.call(["wget", url, "-O", csv_name])
+    #download parquet
+    os.system(f'wget {url} -O {csv_name}')
 
-    df = pd.read_csv(csv_name, nrows=5)
+    df = pd.read_csv(csv_name, compression="gzip", nrows=5)
 
     # convert date columns into datetime
     df.tpep_pickup_datetime = pd.to_datetime(df.tpep_pickup_datetime)
@@ -38,7 +41,7 @@ def main(params):
     df.head(n=0).to_sql(name=table_name,con=engine, if_exists='replace')
 
     # Let's now grab the dataframe with an iterator to batch ingest it into postgres
-    df_iter = pd.read_csv(csv_name, iterator=True, chunksize=100000)
+    df_iter = pd.read_csv(csv_name, compression="gzip", iterator=True, chunksize=100000)
 
     # Now we do the same as with the header, but actually append the chunks of the dataframe iterator
 
