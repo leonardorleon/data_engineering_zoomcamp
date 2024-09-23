@@ -89,6 +89,11 @@ docker run -it \
   dpage/pgadmin4
 ```
 
+- Now that they are on the same network, simply access pgAdming through localhost:8080. 
+- log in with the default email and the default password set up above.
+- Inside pgAdmin, create a server with the networked information: i.e. hostname/address pg-database, 5432 for the port and the user and password set up on the *database* container.
+
+
 # Docker-compose and ingestion script
 
 For the ingestion script, the code from the notebook was cleaned up to use paramters in [dockerfiles/ingest_data.py](ingest_data.py). Simply run by:
@@ -134,7 +139,7 @@ docker run -it \
 
 ## configuring everything with docker compose
 
-Instead of using long commands to ser up our containers and network between them, we can use a simple docker-compose file, which takes all the configuration from various containers and since they are together as services, they automatically share a network. The file can be found [here](dockerfiles/docker-compose.yaml). Then it's just a matter of configuring the connection again, using the database service name as the connection point and the user and password that was set up in docer-compose.
+Instead of using long commands to set up our containers and network between them, we can use a simple docker-compose file, which takes all the configuration from various containers and since they are together as services, they automatically share a network. The file can be found [here](dockerfiles/docker-compose.yaml). Then it's just a matter of configuring the connection again, using the database service name as the connection point and the user and password that was set up in docer-compose.
 
 # SQL refresher
 
