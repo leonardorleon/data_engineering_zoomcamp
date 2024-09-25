@@ -137,9 +137,52 @@ docker run -it \
     --url=${URL}
 ```
 
+This really is only run the one time, and you need to have postgres running already. So you could prepare a docker compose to have the DB and the pgAdmin running, then run the container above to ingest the data.
+
 ## configuring everything with docker compose
 
-Instead of using long commands to set up our containers and network between them, we can use a simple docker-compose file, which takes all the configuration from various containers and since they are together as services, they automatically share a network. The file can be found [here](dockerfiles/docker-compose.yaml). Then it's just a matter of configuring the connection again, using the database service name as the connection point and the user and password that was set up in docer-compose.
+Instead of using long commands to set up our containers and network between them, we can use a simple docker-compose file, which takes all the configuration from various containers and since they are together as services, they automatically share a network. The file can be found [here](dockerfiles/docker-compose.yaml). Then it's just a matter of configuring the connection again, using the database service name as the connection point and the user and password that was set up in docker-compose.
+
+So simply run in detached mode:
+
+```bash
+docker-compose up -d
+```
+
+Then run the ingestion script as shown above, if it's not done already. Note that the network in this case is set by default by docker-compose. 
+
+Since the ingestion script is being run separately, we need to specify the network, so we need to find its name:
+
+```bash
+docker inspect <docker_container_name> -f "{{json .NetworkSettings.Networks }}"
+```
+
+It is normally set up using the name of the directory such as "dockerfiles_default"
+
+We also need to see the name assigned to the database container, this is simply found on 'docker ps' and it will look like "dockerfiles-pgdatabase-1"
+
+build the image
+
+```bash
+docker build -t taxi_ingest:v001 .
+```
+
+run ingestion script with updated parameters
+
+```bash
+URL="https://github.com/DataTalksClub/nyc-tlc-data/releases/download/yellow/yellow_tripdata_2021-01.csv.gz"
+
+docker run -it \
+  --network=dockerfiles_default \
+  taxi_ingest:v001 \
+    --user=root \
+    --password=root \
+    --host=dockerfiles-pgdatabase-1 \
+    --port=5432 \
+    --db=ny_taxi \
+    --table_name=yellow_taxi_trips \
+    --url=${URL}
+```
 
 # SQL refresher
 
