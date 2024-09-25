@@ -100,3 +100,18 @@ The terraform configuration consists of the following files:
     * Asks for approval to the proposed plan, and applies changes to cloud
 4. `terraform destroy`
     * Removes your stack from the Cloud (Recommended to avoid leaving resources on stand-by)
+
+### Terraform state
+
+Terraform saves the state of the resources it creates. In my case, I had worked on this in the past, then deleted everything manually and I came back to it later. 
+
+This caused my terraform state to be out of sync, giving me issues as it didn't have permissions or the resources it was trying to reach didn't exist. The way to solve this was to clean the terraform state (be mindful of this, as terraform forgetting of a resource will prevent it from destroying it also. Potentially leaving resources active you are not aware of)
+
+```bash
+terraform state list
+```
+
+example to remove a resource identified:
+```bash
+terraform state rm 'bigquery.BigQueryDataset'
+```

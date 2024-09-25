@@ -4,22 +4,23 @@ locals {
 
 # No default value provided, so it needs to be assigned at runtime
 variable "project" {
+  default     = "sunlit-amulet-341719"
   description = "Your GCP Project ID"
 }
 
 variable "region" {
   description = "Region for GCP resources. Choose as per your location: https://cloud.google.com/about/locations"
-  default = "europe-southwest1"
-  type = string
+  default     = "europe-west1-d"
+  type        = string
 }
 
 variable "storage_class" {
   description = "Storage class type for your bucket. Check official docs for more info."
-  default = "STANDARD"
+  default     = "STANDARD"
 }
 
 variable "BQ_DATASET" {
   description = "BigQuery Dataset that raw data (from GCS) will be written to"
-  type = string
-  default = "trips_data_all"
+  type        = string
+  default     = "trips_data_all"
 }
