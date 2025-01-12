@@ -25,10 +25,39 @@ A dataflow defines all extraction and processing steps that the data will be sub
 
 A workflow orchestration tool allows us to manage and visualize dataflows, while ensuring that they will be run according to a set of predefined rules. A good workflow orchestration tool makes it easy to schedule or execute dataflows remotely, handle faults, integrate with external services, increase reliability, etc. For more information, read [Workflow Orchestration vs. Data Orchestration — Are Those Different?](https://towardsdatascience.com/workflow-orchestration-vs-data-orchestration-are-those-different-a661c46d2e88) and [Your Code Will Fail (but that’s ok)](https://medium.com/the-prefect-blog/your-code-will-fail-but-thats-ok-f0327a208dbe).
 
+Normally, when talking about data workflows, we talk about DAGs (Directed Acyclic Graph). Some data workflow orchestration tools are:
+
+- Apache Airflow
+- Luigi
+- Prefect
+- Mage
+
 ### Note: Re-run the database and pgadmin containers
 
 They are located on week 1 dockerfiles directory
 
 ```
-docker-compose -f /d/05_projects/data_engineering_zoomcamp/week_01/02_docker_sql/dockerfiles/docker-compose.yaml up
+docker-compose -f C:\Users\Usuario\Documents\00_PROGRAMMING\data_engineering_zoomcamp\01-docker-terraform\02_docker_sql\dockerfiles up -d
 ```
+
+## Airflow Setup
+
+![Airflow-architecture](images\airflow-architecture.jpeg "Airflow Arichitecture")
+
+### Web Server
+
+Graphical user interface to check, trigger and debug the behavior of dags. This is available in localhost 8080
+
+### Scheduler
+
+Component responsible for scheduling jobs, it handles triggering and scheduling workflows, submits tasks to the executor to run, monitor tasks and dags and triggers the task instances once their dependencies are complete.
+
+### Worker
+
+Is a component that executes a task given by the scheduler.
+
+## Metadata Database
+
+Is the backend to the airflow environment, it is used by the executor and web server to store the state of the environment. 
+
+There are other optional components like the data server, redis server -message broker from scheduler to worker-, a flower app, for launching the environment -localhost 5555-, an airflow init service for the initialization service custom to the setup (credentials, env variables, etc.).

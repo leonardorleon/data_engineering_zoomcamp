@@ -9,6 +9,8 @@ Terraform is an open-source tool used for provisioning infrastructure resources.
 - [Configuring Terraform](#configuring-terraform)
   - [Declarations](#declarations)
   - [Execution steps](#execution-steps)
+  - [Terraform State](#terraform-state)
+  - [Conslusions and Summary](#conclusions-and-summary)
 
 ## First steps
 
@@ -57,6 +59,8 @@ The service account needs certain roles and permissions to make changes in the p
 
 *  The "Storage Admin" role (for GCS permissions) and "Storage Object Admin" role (for permission to the objects in GCS).
 *  The "BigQuery Admin" role for the Data Lake.
+
+This can be done directly from the GCP console on a web browser.
 
 ### Enabling APIs for the project
 
@@ -115,3 +119,15 @@ example to remove a resource identified:
 ```bash
 terraform state rm 'bigquery.BigQueryDataset'
 ```
+
+* Side note: Another issue I've found since I've run this on multiple configurations (On local PC and on a VM on GCP cloud) was that sometimes trying to do a terraform apply would run into an 'insufficient privilidges' error. This was because of the default Google APIs access when creating the virtual machine.
+
+A solution is to shut down the virtual machine if it is on and click on "Edit". Somewhere down the page where it says "Cloud API access scopes" change the default option to "Allow full access to all Cloud APIs".
+
+### Conclusions and Summary
+
+This is an introduction topic and it is mostly theory although there is a small practice element.
+
+A big part of the effort on this module is the configuration and setup needed to get everything running. I will not add all the details here since it actually takes a good amount of effort to get everything running and it is dependent on system to system. It's probably best to follow the course video if it is needed to re-do the set up.
+
+I've done the set up a couple of times when starting the course since I changed computers and took breaks in between. My recommendation is to do it directly on a virtual machine since it facilitates many things, especially if you are coming from windows. 
