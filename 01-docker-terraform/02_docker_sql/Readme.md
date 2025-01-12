@@ -93,6 +93,21 @@ docker run -it \
 - log in with the default email and the default password set up above.
 - Inside pgAdmin, create a server with the networked information: i.e. hostname/address pg-database, 5432 for the port and the user and password set up on the *database* container.
 
+#### Side note: 
+
+When using a GCP VM I simply set up the VM and clone the repo there.
+
+To work more easily from my PC, I simply set up my `.ssh/config` on the local PC to include:
+
+```bash
+# set up for dataeng gcp vm instance
+Host de-zoomcamp
+    HostName [Use external IP from VM]
+    User [Your username]
+    IdentityFile [Location to ssh key]
+```
+
+Then you can open from your local vscode the folder in the VM and work directly from there.
 
 # Docker-compose and ingestion script
 
