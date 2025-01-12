@@ -11,6 +11,7 @@ This section is a simple introduction/review of Docker and SQL. The goal is to s
   - [dockerizing the ingestion script](#dockerizing-the-ingestion-script)
   - [configuring everything with docker compose](#configuring-everything-with-docker-compose)
 - [SQL refresher](#sql-refresher)
+- [Summary and Conclusions](#summary-and-conclusions)
 
 # Setting up postgres and pgAdmin
 
@@ -107,7 +108,7 @@ Host de-zoomcamp
     IdentityFile [Location to ssh key]
 ```
 
-Then you can open from your local vscode the folder in the VM and work directly from there.
+Then you can open from your local vscode the folder in the VM and work directly from there. Also, keep in mind to forward ports 8080 and 5432 for the purposes of this module.
 
 # Docker-compose and ingestion script
 
@@ -203,7 +204,9 @@ docker run -it \
 
 For the refresher, we added a new table to the database, coming from:
 
-https://s3.amazonaws.com/nyc-tlc/misc/taxi+_zone_lookup.csv
+https://d37ci6vzurychx.cloudfront.net/misc/taxi_zone_lookup.csv
+
+This can be added from the example in the jupyter notebook or by creating or updating the ingestion script to account for this csv. That being said, for such a small table, it is easier to manually add it as in the jupyter notebook file.
 
 A Few query examples follow:
 
@@ -235,8 +238,8 @@ SELECT
 	t."DOLocationID",
 	CONCAT(zpu."Borough",' / ', zpu."Zone") AS pickup_loc,
 	CONCAT(zdo."Borough",' / ', zdo."Zone") AS dropoff_loc
-FROM
-	yellow_taxi_trips AS t JOIN ny_taxi_zones AS zpu
+FROM yellow_taxi_trips AS t 
+  JOIN ny_taxi_zones AS zpu
 		ON t."PULocationID" = zpu."LocationID"
 	JOIN ny_taxi_zones AS zdo
 		ON t."DOLocationID" = zdo."LocationID" 
@@ -244,6 +247,7 @@ LIMIT 100;
 ```
 
 Example of left join, which is basically the same in terms of writing the query but if there are records on left table that are not in right table, they still show with. The opposite is true for right join, if we have records in our right table but not in the left table, we still get the record with the info from the right table. 
+
 ```SQL
 SELECT
 	t.tpep_pickup_datetime,
@@ -254,7 +258,8 @@ SELECT
 	CONCAT(zpu."Borough",' / ', zpu."Zone") AS pickup_loc,
 	CONCAT(zdo."Borough",' / ', zdo."Zone") AS dropoff_loc
 FROM
-	yellow_taxi_trips AS t LEFT JOIN ny_taxi_zones AS zpu
+	yellow_taxi_trips AS t 
+  LEFT JOIN ny_taxi_zones AS zpu
 		ON t."PULocationID" = zpu."LocationID"
 	LEFT JOIN ny_taxi_zones AS zdo
 		ON t."DOLocationID" = zdo."LocationID" 
@@ -304,3 +309,15 @@ GROUP BY
 ORDER BY
 	"count" DESC;
 ```
+
+# Summary and Conclusions
+
+This is the larger part of week 1 assignments, the terraform module was more of an introduction to managing cloud resources.
+
+On the docker part of the module, a lot more was covered. From creating manual containers for the database and for pgadmin, having to connect them through a manually created network, to industrializing the whole process into a simple docker compose, which can be run on a single command in a detached way to inmediately be able to access the DB and it's contents.
+
+There are multiple advantages to the docker-compose system, such as them sharing a network by default and only needing to use one command to bring the whole system up. 
+
+Finally, having these two elements set up, we were able to utilize the ingestion script (running in it's own container) to introduce the data to the database in a repeatable and standarized way. 
+
+Although more of a secondary objective, the homework also does a short review of sql syntax which also helps to get used to the pgadmin interface. 
