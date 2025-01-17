@@ -75,8 +75,16 @@ How many taxi trips were made on October 18th, 2019?
 
 - 13417
 - 15417
-- 17417
+- 17417 <--
 - 19417
+
+```sql
+select 
+	count(*)
+from green_taxi_trips_2019
+where lpep_pickup_datetime >= '2019-10-18'
+	and lpep_dropoff_datetime < '2019-10-19'
+```
 
 
 ## Question 4. Longest trip for each day
@@ -89,7 +97,15 @@ Tip: For every day, we only care about one single trip with the longest distance
 - 2019-10-11
 - 2019-10-24
 - 2019-10-26
-- 2019-10-31
+- 2019-10-31 <--
+
+```sql
+select
+	date(lpep_pickup_datetime), trip_distance
+from green_taxi_trips_2019
+order by trip_distance desc
+limit 1
+```
 
 
 ## Question 5. Three biggest pickup zones
@@ -99,11 +115,29 @@ Which where the top pickup locations with over 13,000 in
 
 Consider only `lpep_pickup_datetime` when filtering by date.
  
-- East Harlem North, East Harlem South, Morningside Heights
+- East Harlem North, East Harlem South, Morningside Heights <--
 - East Harlem North, Morningside Heights
 - Morningside Heights, Astoria Park, East Harlem South
 - Bedford, East Harlem North, Astoria Park
 
+
+```sql
+select 
+	date(gt.lpep_pickup_datetime) 				as dt,
+	zn."Borough" 								as borough, 
+	zn."Zone"									as zon,
+	cast(sum(gt.total_amount) as int)			as sum_total
+from green_taxi_trips_2019 as gt
+left join green_ny_taxi_zones as zn
+	on gt."PULocationID" = zn."LocationID"
+where date(gt.lpep_pickup_datetime) = '2019-10-18'
+group by 
+	dt, 
+	borough, 
+	zon
+order by sum(gt.total_amount) desc
+limit 3
+```
 
 ## Question 6. Largest tip
 
@@ -116,10 +150,28 @@ Note: it's `tip` , not `trip`
 We need the name of the zone, not the ID.
 
 - Yorkville West
-- JFK Airport
+- JFK Airport <--
 - East Harlem North
 - East Harlem South
 
+```sql
+select
+	date_part('year',gt.lpep_pickup_datetime)	as pu_year,
+	date_part('month',gt.lpep_pickup_datetime)	as pu_month,
+	pu_zn."Zone" 	as pu_zone,
+	do_zn."Zone"	as do_zone,
+	gt.tip_amount
+from green_taxi_trips_2019 as gt
+left join green_ny_taxi_zones as pu_zn
+	on gt."PULocationID" = pu_zn."LocationID"
+left join green_ny_taxi_zones as do_zn
+	on gt."DOLocationID" = do_zn."LocationID"
+where 
+	date_part('year',gt.lpep_pickup_datetime) = '2019' 
+	and date_part('month',gt.lpep_pickup_datetime) = '10'
+	and pu_zn."Zone" = 'East Harlem North'
+order by gt.tip_amount desc
+```
 
 ## Terraform
 
@@ -132,12 +184,21 @@ Copy the files from the course repo
 Modify the files as necessary to create a GCP Bucket and Big Query Dataset.
 
 
-## Question 7. Creating Resources
+## Question 7. Terraform Workflow
 
-After updating the `main.tf` and `variable.tf` files run:
+Which of the following sequences, **respectively**, describes the workflow for: 
+1. Downloading the provider plugins and setting up backend,
+2. Generating proposed changes and auto-executing the plan
+3. Remove all resources managed by terraform`
 
-```bash
-terraform apply
-```
+Answers:
+- terraform import, terraform apply -y, terraform destroy
+- teraform init, terraform plan -auto-apply, terraform rm
+- terraform init, terraform run -auto-approve, terraform destroy
+- terraform init, terraform apply -auto-approve, terraform destroy <--
+- terraform import, terraform apply -y, terraform rm
 
-Paste the output of this command into the homework submission form.
+
+## Submitting the solutions
+
+* Form for submitting: https://courses.datatalks.club/de-zoomcamp-2025/homework/hw1
