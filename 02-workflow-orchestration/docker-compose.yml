@@ -3,6 +3,8 @@ volumes:
     driver: local
   kestra-data:
     driver: local
+  zoomcamp-data:
+    driver: local
 
 services:
   postgres:
@@ -63,3 +65,22 @@ services:
     depends_on:
       postgres:
         condition: service_started
+
+# Services for the local database which will have the data. The other postgres is for kestra specifically        
+  pgdatabase:
+    image:  postgres:13
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_DB=postgres-zoomcamp
+    volumes:
+      - zoomcamp-data:/var/lib/postgresql/data:rw  # NOTE: it's not necessary to specify rw mode, but for completeness it's ok
+    ports:
+      - "5432:5432"
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@admin.com
+      - PGADMIN_DEFAULT_PASSWORD=root
+    ports:
+      - "8082:80"

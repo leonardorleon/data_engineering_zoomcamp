@@ -105,3 +105,10 @@ Many components of kestra are run in docker containers. For example python scrip
 
 ## ETL Pipelines with Postgres in Kestra
 
+https://www.youtube.com/watch?v=OkfLX28Ecjg&list=PLEK3H8YwZn1oPPShk2p5k3E9vO-gPnUCf&index=3
+
+The goal for this section is to create an ETL for both yellow taxi data and green taxi data. Backups for these can be found here:
+
+https://github.com/DataTalksClub/nyc-tlc-data/releases
+
+The first step is to set up the docker-compose. I've set it up just as shown in the documentation for kestra, but I've additionally added another postgres database just as we did in week 1 to work with the taxi data separately from anything related to kestra. Also, I've added the pgadmin to the docker compose in order to view and query the data on the database. 
