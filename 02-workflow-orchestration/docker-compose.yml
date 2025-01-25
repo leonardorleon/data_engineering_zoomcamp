@@ -1,3 +1,16 @@
+networks:
+  network1:
+    name: zoomcamp-network
+    driver: bridge
+    attachable: true
+    # ipam:
+    #   driver: default
+    #   config:
+    #     - subnet: 172.18.0.0/16
+    #       ip_range: 172.18.5.0/24
+    #       gateway: 172.18.0.1
+
+# Using named docker volumes to not have to bind specific folders and have docker manage them.
 volumes:
   postgres-data:
     driver: local
@@ -20,6 +33,10 @@ services:
       interval: 30s
       timeout: 10s
       retries: 10
+    networks:
+      - network1
+    # extra_hosts:
+    #   - "host.docker.internal:host-gateway"
 
   kestra:
     image: kestra/kestra:latest
@@ -65,10 +82,15 @@ services:
     depends_on:
       postgres:
         condition: service_started
+    networks:
+      - network1
+    # extra_hosts:
+    #   - "host.docker.internal:host-gateway"
 
 # Services for the local database which will have the data. The other postgres is for kestra specifically        
   pgdatabase:
     image:  postgres
+    container_name: pgdatabase
     environment:
       - POSTGRES_USER=root
       - POSTGRES_PASSWORD=root
@@ -76,7 +98,11 @@ services:
     volumes:
       - zoomcamp-data:/var/lib/postgresql/data:rw  # NOTE: it's not necessary to specify rw mode, but for completeness it's ok
     ports:
-      - "5432:5432"
+      - "5432:5432"    #NOTE: Both postgres can be in the same network and port, you can use the service name to differenciate.
+    # extra_hosts:
+    #   - "host.docker.internal:host-gateway"
+    networks:
+      - network1
   pgadmin:
     image: dpage/pgadmin4
     environment:
@@ -84,3 +110,10 @@ services:
       - PGADMIN_DEFAULT_PASSWORD=root
     ports:
       - "8082:80"
+    networks:
+      - network1
+    # extra_hosts:
+    #   - "host.docker.internal:host-gateway"
+
+
+# https://stackoverflow.com/questions/70725881/what-is-the-equivalent-of-add-host-host-docker-internalhost-gateway-in-a-comp

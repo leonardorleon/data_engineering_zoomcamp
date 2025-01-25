@@ -1,29 +1,24 @@
-id: ETL-green-yellow-taxi
+id: ETL-green-yellow-taxi-scheduled
 namespace: de_zoomcamp
+description: |
+  Best to add a label `backfill:true` from the UI to track executions created via a backfill.
+  CSV data used here comes from: https://github.com/DataTalksClub/nyc-tlc-data/releases
+
+concurrency:
+  limit: 1
 
 inputs:
   - id: taxi
     type: SELECT
     displayName: Select taxi type
     values: ['yellow','green']
-    defaults: 'yellow'
-  - id: year
-    type: SELECT
-    displayName: Select year
-    values: ['2019','2020']
-    defaults: '2019'
-  - id: month
-    type: SELECT
-    displayName: Select year
-    values: ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
-    defaults: "01"
+    defaults: 'green'
 
 variables:
-  file: "{{inputs.taxi}}_tripdata_{{inputs.year}}-{{inputs.month}}.csv"
+  file: "{{inputs.taxi}}_tripdata_{{trigger.date | date('yyyy-MM')}}.csv"
   staging_table: "public.{{inputs.taxi}}_tripdata_staging"
   table: "public.{{inputs.taxi}}_tripdata"
-  data: "{{outputs.extract.outputFiles[inputs.taxi ~ '_tripdata_' ~ inputs.year ~ '-' ~ inputs.month ~ '.csv']}}"
-
+  data: "{{outputs.extract.outputFiles[inputs.taxi ~ '_tripdata_' ~ (trigger.date | date('yyyy-MM')) ~ '.csv']}}"
 
 tasks:
   - id: set_label
@@ -267,6 +262,20 @@ tasks:
 pluginDefaults:
   - type: io.kestra.plugin.jdbc.postgresql
     values:
-      url: jdbc:postgresql://pgdatabase:5432/postgres-zoomcamp      # Note: use docker service name for the conection since they're in the same docker network.
+      url: jdbc:postgresql://pgdatabase:5432/postgres-zoomcamp
       username: root
       password: root
+
+triggers:
+  - id: green_schedule
+    type: io.kestra.plugin.core.trigger.Schedule
+    cron: "0 9 1 * *"
+    inputs:
+      taxi: green
+
+  - id: yellow_schedule
+    type: io.kestra.plugin.core.trigger.Schedule
+    cron: "0 10 1 * *"
+    disabled: true
+    inputs:
+      taxi: yellow
