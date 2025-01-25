@@ -68,7 +68,7 @@ services:
 
 # Services for the local database which will have the data. The other postgres is for kestra specifically        
   pgdatabase:
-    image:  postgres:13
+    image:  postgres
     environment:
       - POSTGRES_USER=root
       - POSTGRES_PASSWORD=root
