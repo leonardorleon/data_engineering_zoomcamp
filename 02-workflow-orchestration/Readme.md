@@ -188,3 +188,15 @@ And on the results, take the "gateway" ip from the docker network:
 ```
 
 I would like to solve the hostname issue, but so far haven't been able to resolve it. 
+
+Maybe the IPAM section of the docker network should be set up in the docker-compose file to ensure it's static and then use that in the connection between dbt and postgres.
+
+## Kestra and GCP
+
+As shown in the flows 04 through 07, the set up for GCP and big query is actually simpler than for DBT. Basically take the service account key and add it to the key values in kestra, as well as other items such as the project, database, bucket, region.
+
+These can be used for identification when using the GCP plugin or when connecting DBT with the database.
+
+The main difference that's worth noting is that in Big Query, when DBT asks for the dataset, you should use the project id and when it asks for a schema, you should use what BQ calls the dataset.
+
+Once these steps are completed, the flows work properly.

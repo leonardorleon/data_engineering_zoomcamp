@@ -3,14 +3,14 @@ networks:
     name: zoomcamp-network
     driver: bridge
     attachable: true
-    # ipam:
-    #   driver: default
-    #   config:
-    #     - subnet: 172.18.0.0/16
-    #       ip_range: 172.18.5.0/24
-    #       gateway: 172.18.0.1
+    ipam:
+      # driver: default
+      config:
+        - subnet: 172.18.0.0/16
+          ip_range: 172.18.5.0/24
+          gateway: 172.18.0.1
 
-# Using named docker volumes to not have to bind specific folders and have docker manage them.
+# Using named docker volumes to not have to bind specific folders and have docker manage them instead.
 volumes:
   postgres-data:
     driver: local
@@ -87,7 +87,7 @@ services:
     # extra_hosts:
     #   - "host.docker.internal:host-gateway"
 
-# Services for the local database which will have the data. The other postgres is for kestra specifically        
+# Services for the local database which will have the data for the course. The other postgres is for kestra specifically        
   pgdatabase:
     image:  postgres
     container_name: pgdatabase
@@ -114,6 +114,3 @@ services:
       - network1
     # extra_hosts:
     #   - "host.docker.internal:host-gateway"
-
-
-# https://stackoverflow.com/questions/70725881/what-is-the-equivalent-of-add-host-host-docker-internalhost-gateway-in-a-comp
