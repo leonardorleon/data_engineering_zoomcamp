@@ -6,6 +6,7 @@ venv*
 01-docker-terraform/02_docker_sql/ny_taxi_postgres_data
 keys
 week_01/01_terraform/terraform/.terraform
+03-data-warehouse/serving_dir
 
 
 ## Terraform

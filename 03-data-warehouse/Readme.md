@@ -265,3 +265,100 @@ Dremel makes an execution tree. The root server receives the query which dicides
 ![dremel](images/06_dremel.png)
 
 Distributing the workers is what makes big query a fast datawarehouse. If it all worked on the same node, it would take much longer. 
+
+## ML in Big Query
+
+The target audience for ML in big query is for more business oriented individuals to be able to use machine learning without extensive knowledge on Python or Java. It also doesn't require to export the data into a different system, it all can be done in the datawarehouse.
+
+### ML in BigQuery pricing
+
+* Free tier
+
+  * 10GB per month of data storage
+  * 1 TB per month of queries processed
+  * ML Create model step: First 10GB per month is free
+
+After the free tier, it costs around $250 per TB on various regression and clustering models. and $5 per TB for auto ML, DNN and boosted tree model creation.
+
+### ML development overview
+
+* Data collection
+* Data evaluation, transformation, feature engineering, etc.
+* Split the data into training and test sets
+* Build machine learning model: choosing the correct algorithm, optimize parameters
+* Validate model using various metrics and the testing data.
+* Finally deploy the model
+
+Big query can help with many of these elements right out of the gate. Including deploying a model using a dokcer image. 
+
+For choosing the correct tool, you can use the short overview shown below. 
+
+![ml algo guide](images/07_ml_algo_guide.png)
+
+### ML in BQ practice:
+
+Check the steps in [big_query_ml.sql](examples/big_query_ml.sql) to create models and play around with hyper parameter tuning.
+
+After that, you can follow these steps to extract the model and run it in a docker container to get predictions using a REST API:
+
+First make sure you log in to gcloud
+
+```gcloud auth login```
+  
+Next, using the appropriate service account with big qury priviledges, run a command to extract the model from big query to a bucket. 
+
+First make sure to create the bucket in the same region as the big query dataset for it to work.
+
+```
+bq --project_id sunlit-amulet-341719 extract -m zoomcamp.tip_model gs://sunlit_ml_model/tip_model     
+``` 
+
+Create in your local environment a directory where to download the model itself.
+
+```
+mkdir /tmp/model
+```
+
+Next download from the bucket into your local pc
+
+```
+gsutil cp -r gs://sunlit_ml_model/tip_model /tmp/model
+```
+
+Then let's create a serving directory, that will be used by the docker tensorflow container to serve the model in an API
+
+```
+mkdir -p serving_dir/tip_model/1
+```
+
+Then simply bring the model from the temp table to this serving directory
+
+```
+cp -r /tmp/model/tip_model/* serving_dir/tip_model/1
+```
+
+Pull the tensorflow serving image from docker 
+
+```
+docker pull tensorflow/serving
+```
+
+Start the docker container so that it serves the model in the port 8501, mount in the serving directory the model and give it a name
+
+``` 
+docker run -p 8501:8501 --mount type=bind,source=`pwd`/serving_dir/tip_model,target=/models/tip_model -e MODEL_NAME=tip_model -t tensorflow/serving &
+```
+
+Finally, you can perform a post request to the api passing the necessary values to return a prediction:
+
+```
+curl -d '{"instances": [{"passenger_count":1, "trip_distance":12.2, "PULocationID":"193", "DOLocationID":"264", "payment_type":"2","fare_amount":20.4,"tolls_amount":0.0}]}'   -X POST http://localhost:8501/v1/models/tip_model:predict
+```
+
+The result will look something like this:
+
+```
+{
+    "predictions": [[0.24970640336323413]]
+}
+```
