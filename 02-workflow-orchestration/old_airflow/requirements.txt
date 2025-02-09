@@ -1,6 +1,6 @@
 pandas==1.5.2
 prefect==2.7.7
-pydantic==1.10.0 # Added a pinned version of pydantic, since upgraded version gives an issue with prefect older version
+pydantic==1.10.13 # Added a pinned version of pydantic, since upgraded version gives an issue with prefect older version
 prefect-sqlalchemy==0.2.2
 prefect-gcp[cloud_storage]==0.2.4
 protobuf==4.21.11
