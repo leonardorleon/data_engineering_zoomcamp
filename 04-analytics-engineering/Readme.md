@@ -63,7 +63,7 @@ Run the following commands -
 This is more of a workaround, but in the current set up you have to execute the docker-compose from the folder where the docker files are located and it is a cumbersome command to type up:
 
 ```bash
-docker compose run --workdir="//usr/app/dbt/taxi_rides_ny" dbt-bq-dtc debug
+docker-compose run --workdir="//usr/app/dbt/taxi_rides_ny" dbt-bq-dtc debug
 ``` 
 
 So another option is to create an executable file which does this for us:
@@ -80,3 +80,71 @@ alias d-dbt='/home/leo/leo_data_engineering/04-analytics-engineering/docker_setu
 ```
 
 This is more similar to running dbt installed in the host computer and saves a lot of hassle when running dbt. Either way, the best way would probably be to run it locally and use things like dbt power user extension like I do in my work set up. That being said, for the purposes of the course and the limited space on the vm I am working on, I will settle with the docker configuration.
+
+### Run it in interactive mode
+
+Another option that I found was to run the container in interactive mode. All I had to do was change the entrypoint in the docker file to `bash` rather than `dbt` 
+
+then rebuild the docker compose with `docker-compose build`
+
+and finally simply run the container in interactive mode with `docker-compose run --workdir="//usr/app/dbt/taxi_rides_ny" dbt-bq-dtc`
+
+afterwards the container will remain active and can enter from a different terminal with: `docker exec -it [container id] sh`
+
+# DBT
+
+We'll use dbt to create facts, dimensions and datamarts in a modular way. 
+
+## Anatomy of a dbt model
+
+dbt models have a configuration with various materialization strategies. The model itself is a simple sql query, and dbt will take care of preparing the DDL according to our configurations to create what we've requested.
+
+Materializations can be:
+* Ephemeral
+* Table
+* View
+* Incremental
+
+In dbt we will prepare modular data modeling as shown in the following picture ![](images/00_modular_data_modeling.png)
+
+### Sources in dbt
+
+Sources are data loaded to the dwh which we use for the models. This is defined in the yml files in the models folder and it is used by the source macro on each model to compile the source name to the right schema, as well as set up dependencies properly. In the sources yml file, freshness configuration can be set
+
+### Seeds
+
+Seeds are csv files stored in our repository on the seed folder. It's useful for version conrolling and it's equivalent to a copy command. It is useful for data that doesn't change frequently. It is run with `dbt seed -s file_name`
+
+### References
+
+The ref macro is used for existing dbt models and it will compile the models in any environment you are using. It also handles dependencies automatically. 
+
+### Macros
+
+They can be used for control structures such as if statements and for loops in sql. They use jinja as a templating language and they allow us to generate code inside our models. 
+
+The macros are analogous to functions in most programming languages. 
+
+### Packages
+
+Packages are analogous to libraries in other programming languages. They are basically projects which we can use in our own project. 
+
+Adding a package to your dbt project means that you can use their models and macros in your own project. 
+
+In order to import the packages from packages.yml file, one must run `dbt deps`
+
+
+### Variables
+
+Variables are useful for defining values that should be accessed across the project. We can define variables in dbt_project.yml or even in the command line. We can use a macro in dbt to get the values from that variable. `{{var('...')}}` 
+
+An example of using jinja for logic and a variable inside a model can be seen below. 
+
+```
+{% if var('is_test_run', default=true) %}
+
+  limit 100
+
+{% endif %}
+```
+

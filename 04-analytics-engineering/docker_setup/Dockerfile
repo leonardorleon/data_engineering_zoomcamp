@@ -51,7 +51,7 @@ RUN python -m pip install --upgrade pip setuptools wheel --no-cache-dir
 # Set docker basics
 WORKDIR /usr/app/dbt/
 VOLUME /usr/app
-ENTRYPOINT ["dbt"]
+ENTRYPOINT ["bash"]
 
 ##
 # dbt-core
