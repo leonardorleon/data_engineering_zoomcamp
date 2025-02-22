@@ -87,7 +87,7 @@ Another option that I found was to run the container in interactive mode. All I 
 
 then rebuild the docker compose with `docker-compose build`
 
-and finally simply run the container in interactive mode with `docker-compose run --workdir="//usr/app/dbt/taxi_rides_ny" dbt-bq-dtc`
+and finally simply run the container in interactive mode with `docker-compose run -it --workdir="//usr/app/dbt/taxi_rides_ny" dbt-bq-dtc`
 
 afterwards the container will remain active and can enter from a different terminal with: `docker exec -it [container id] sh`
 
@@ -148,3 +148,42 @@ An example of using jinja for logic and a variable inside a model can be seen be
 {% endif %}
 ```
 
+### Tests
+
+Tests are assumptions that we make about our data. They are essentially `select` statements that return an amount of failing records. Tests are defined in the .yml file and can be either standard tests or custom tests. 
+
+Some of the standard tests provided by dbt are:
+
+* unique
+* not null
+* accepted values
+* a foreign key to another table
+
+On the other hand, you can create custom tests as queries specific to your use case that return failing records. 
+
+### Documentation
+
+Dbt provides a way to generate documentation about your project. You can add documentation in the .yml files, including your tests, model descriptions, column descriptions, etc. 
+
+Dbt presents the documentation by hosting it on a website which can be visited and there you can see the lineage of your models and all the other documentation bits you've included as well as some automatic ones.
+
+To generate the documentation run: `dbt docs generate`
+
+To host the documentation website run: `dbt docs serve`
+
+This will start serving a website which can be viewed in your browser by default in `http://localhost:8080`
+
+
+### Deployment
+
+Normally we develop in a separate branch than the main branch, it has a separate environment where we can test and make sure everything works well safely, to then pass it to the production environment through the deployment process.
+
+Ideally the development environment is on a different schema and ideally a different user, so it cannot accidentally affect the production environment.
+
+A development - deployment workflow will be something like:
+
+* Develop in a user branch
+* Open a PR to merge branch into main branch
+* Merge the branch to the main branch
+* Run the new models in production environment using the main branch
+* Schedule the models
