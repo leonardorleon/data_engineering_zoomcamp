@@ -1,7 +1,7 @@
 {{ config(materialized='table') }}
 
 select 
-    locationid, 
+    CAST(locationid AS STRING)  AS locationid, 
     borough, 
     zone, 
     replace(service_zone,'Boro','Green') as service_zone 
