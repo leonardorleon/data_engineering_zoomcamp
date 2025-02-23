@@ -149,9 +149,30 @@ Considering the YoY Growth in 2020, which were the yearly quarters with the best
 - green: {best: 2020/Q2, worst: 2020/Q1}, yellow: {best: 2020/Q2, worst: 2020/Q1}
 - green: {best: 2020/Q2, worst: 2020/Q1}, yellow: {best: 2020/Q3, worst: 2020/Q4}
 - green: {best: 2020/Q1, worst: 2020/Q2}, yellow: {best: 2020/Q2, worst: 2020/Q1}
-- green: {best: 2020/Q1, worst: 2020/Q2}, yellow: {best: 2020/Q1, worst: 2020/Q2}
+- green: {best: 2020/Q1, worst: 2020/Q2}, yellow: {best: 2020/Q1, worst: 2020/Q2} <------
 - green: {best: 2020/Q1, worst: 2020/Q2}, yellow: {best: 2020/Q3, worst: 2020/Q4}
 
+
+The model used was: [fct_taxi_trips_quarterly_revenue.sql](../dbt/taxi_rides_ny/models/core/fct_taxi_trips_quarterly_revenue.sql)
+
+```
+with ranked as (
+  SELECT 
+    *,
+    RANK() OVER (PARTITION BY service_type ORDER BY yoy_rev_growth DESC) AS best_rank,
+    RANK() OVER (PARTITION BY service_type ORDER BY yoy_rev_growth ASC) AS worst_rank
+  FROM sunlit-amulet-341719.zoomcamp_prod.fct_taxi_trips_quarterly_revenue
+  WHERE year_quarter LIKE '2020/Q%'
+
+)
+select * 
+from ranked
+where  best_rank = 1 OR worst_rank = 1
+```
+
+And the result looked like this: 
+
+![](hw4_q5.png)
 
 ### Question 6: P97/P95/P90 Taxi Monthly Fare
 
@@ -162,11 +183,16 @@ Considering the YoY Growth in 2020, which were the yearly quarters with the best
 Now, what are the values of `p97`, `p95`, `p90` for Green Taxi and Yellow Taxi, in April 2020?
 
 - green: {p97: 55.0, p95: 45.0, p90: 26.5}, yellow: {p97: 52.0, p95: 37.0, p90: 25.5}
-- green: {p97: 55.0, p95: 45.0, p90: 26.5}, yellow: {p97: 31.5, p95: 25.5, p90: 19.0}
+- green: {p97: 55.0, p95: 45.0, p90: 26.5}, yellow: {p97: 31.5, p95: 25.5, p90: 19.0} <------
 - green: {p97: 40.0, p95: 33.0, p90: 24.5}, yellow: {p97: 52.0, p95: 37.0, p90: 25.5}
 - green: {p97: 40.0, p95: 33.0, p90: 24.5}, yellow: {p97: 31.5, p95: 25.5, p90: 19.0}
 - green: {p97: 55.0, p95: 45.0, p90: 26.5}, yellow: {p97: 52.0, p95: 25.5, p90: 19.0}
 
+
+The model used was: [fct_taxi_trips_monthly_fare_p95.sql](../dbt/taxi_rides_ny/models/core/fct_taxi_trips_monthly_fare_p95.sql)
+
+
+And the result looked like this: ![](hw4_q6.png)
 
 ### Question 7: Top #Nth longest P90 travel time Location for FHV
 
@@ -182,12 +208,13 @@ Now...
 
 For the Trips that **respectively** started from `Newark Airport`, `SoHo`, and `Yorkville East`, in November 2019, what are **dropoff_zones** with the 2nd longest p90 trip_duration ?
 
-- LaGuardia Airport, Chinatown, Garment District
+- LaGuardia Airport, Chinatown, Garment District  <------
 - LaGuardia Airport, Park Slope, Clinton East
 - LaGuardia Airport, Saint Albans, Howard Beach
 - LaGuardia Airport, Rosedale, Bath Beach
 - LaGuardia Airport, Yorkville East, Greenpoint
 
+looking at the core models: dim_fhv_trips, fct_fhv_monthly_zone_traveltime_p90. Then doing a dense rank partitioned by pu_zone and ordered by the percentile trip distance.
 
 ## Submitting the solutions
 
