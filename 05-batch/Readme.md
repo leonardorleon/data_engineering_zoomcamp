@@ -190,3 +190,158 @@ This is what the whole operation would look like in the spark DAG:
 
 There are two stages, because it first does the mapping and then it needs to ensure all the values with the same keys are in the same partitions. After that it needs to reshuffle, and proceed with the second stage, where it performs the rest of the operations. 
 
+## mapPartitions
+
+This is a transformation in Spark that allows to apply a function to each partition of an RDD. The main difference with the map function used before is that map applies a function to each element individually, while the mapPartition provides access to the entire partition at once. This can be useful in some cases where it reduces overhead and allows for more complex processing within each partition.
+
+Basically you provide a function to mapPartitions and it is applied to each partition of the RDD. The function receives an iterator with all the elements in the partition. Here you can perform any processing needed within the function. Finally, the function should return an iterator which spark will use to construct the new RDD or DataFrame. 
+
+# Connecting spark to GCS
+
+Follow the example in [](code/10_spark_gcs.ipynb) to see how to connect to google cloud storage. 
+
+For a more detailed explanation follow the [video guide:](https://www.youtube.com/watch?v=Yyz293hBVcQ&list=PL3MmuxUbc_hJed7dXYoJw8DoCuVHhGEQb&index=56&pp=iAQB)
+
+Also there is a written guide on the [course git repo:](https://github.com/DataTalksClub/data-engineering-zoomcamp/blob/main/05-batch/setup/hadoop-yarn.md)
+
+# Creating a local spark cluster
+
+First go to the directory where spark was installed, and simply run `./sbin/start-master.sh` 
+
+```
+(base) leo@sunlit-instance:~$
+cd spark/
+(base) leo@sunlit-instance:~/spark$
+ls
+jdk-11.0.2  spark-3.5.4-bin-hadoop3
+(base) leo@sunlit-instance:~/spark$
+cd spark-3.5.4-bin-hadoop3/
+(base) leo@sunlit-instance:~/spark/spark-3.5.4-bin-hadoop3$
+ls
+LICENSE  NOTICE  R  README.md  RELEASE  bin  conf  data  examples  jars  kubernetes  licenses  python  sbin  yarn
+(base) leo@sunlit-instance:~/spark/spark-3.5.4-bin-hadoop3$
+./sbin/start-m
+start-master.sh                 start-mesos-dispatcher.sh       start-mesos-shuffle-service.sh
+(base) leo@sunlit-instance:~/spark/spark-3.5.4-bin-hadoop3$
+./sbin/start-master.sh
+starting org.apache.spark.deploy.master.Master, logging to /home/leo/spark/spark-3.5.4-bin-hadoop3/logs/spark-leo-org.apache.spark.deploy.master.Master-1-sunlit-instance.out
+(base) leo@sunlit-instance:~/spark/spark-3.5.4-bin-hadoop3$
+```
+
+After this it will create the instance, and the UI for the spark master will be found in port 8080.
+
+To initiate the session from a jupyter notebook for instance:
+
+```
+spark = SparkSession.builder \
+    .master("spark://sunlit-instance.europe-west1-d.c.sunlit-amulet-341719.internal:7077") \
+    .appName('test') \
+    .getOrCreate()
+```
+
+
+After creating this local spark cluster, we can also transform the jupyter notebook into a script. This is done using [](code/11_spark_local_cluster.ipynb) and running the command line
+
+```
+jupyter nbconvert --to script 11_spark_local_cluster.ipynb
+```
+
+This will create a python script with the contents of the notebook. After some cleaning up and adding an argument parser to make it more customizable, we can run it with the following command:
+
+```
+python 11_spark_local_cluster.py \
+    --input_green=data/pq/green/2020/*/ \
+    --input_yellow=data/pq/yellow/2020/*/ \
+    --output=data/report/report-2020
+```
+
+If you'd like to run a job with spark-submit instead, where you don't hardcode the master url, as you may have multiple clusters active, you can simply do it the following way:
+
+```
+URL = ${SPARK_MASTER_URL}
+
+spark-submit \
+    --master="spark://<URL>" \
+    my_script.py \
+        --input_green=data/pq/green/2020/*/ \
+        --input_yellow=data/pq/yellow/2020/*/ \
+        --output=data/report-2020
+```
+
+note: you will need to remove the master option from the spark session builder command in the script. 
+
+# Setting up a dataproc cluster
+
+In dataproc, create a cluster on google compute engine
+
+* set up in the same region as the bucket
+* normally set it up as standard, but for demo purposes use a single node
+* include jupyter notebook and docker
+
+The rest of the settings can be left as default.
+
+To run a job, upload the code to a bucket for example, such as :
+
+`gsutil cp 11_spark_local_cluster.py gs://datalake_ny_taxi_de-zoomcamp/code/11_spark_local_cluster.py`
+
+indicate that's the main python file. We don't have dependencies, but we do have arguments
+
+```
+--input_green=gs://datalake_ny_taxi_de-zoomcamp/pq/green/2020/*/ 
+--input_yellow=gs://datalake_ny_taxi_de-zoomcamp/pq/yellow/2020/*/ 
+--output=gs://datalake_ny_taxi_de-zoomcamp/report-2020
+```
+
+pass each argument individuallt, then click submit. The job will run and you will find the result in the bucket.
+
+In the job details, you can also go into the configuration of the job and can find an "equivalent rest" button.
+
+There are three ways to submit jobs to dataproc cluster:
+
+* from web ui
+* google cloud sdj
+* rest api
+
+In order to submit a job through google cloud sdk, you can follow this link: https://cloud.google.com/dataproc/docs/guides/submit-job#dataproc-submit-job-gcloud
+
+
+```
+gcloud dataproc jobs submit pyspark \
+    --cluster=cluster-de-zoomcamp \
+    --region=europe-west1 \
+    gs://datalake_ny_taxi_de-zoomcamp/code/11_spark_local_cluster.py \
+    -- \
+        --input_green=gs://datalake_ny_taxi_de-zoomcamp/pq/green/2020/*/ \
+        --input_yellow=gs://datalake_ny_taxi_de-zoomcamp/pq/yellow/2020/*/ \
+        --output=gs://datalake_ny_taxi_de-zoomcamp/report-2020
+```
+
+At first it will fail, since we are using the service account we've worked with on terraform and early modules of the course. We need to enable it to submit jobs.
+
+* Go to IAM
+* Select your service account
+* Add a dataproc role, probably dataproc submit is enough but can also use administrator for simplicity
+
+
+# Connecting Spark to BigQuery
+
+The instructions to follow can be found in: https://github.com/DataTalksClub/data-engineering-zoomcamp/blob/main/05-batch/code/cloud.md
+
+most of it remains the same, but we need to add a few configurations:
+
+* create the table in big query
+* modify the python file so that:
+    * you set up a temporary bucket in the spark configuration. Dataproc already creates some buckets which you can use.
+    * the writing part of the script looks like [](code/11_spark_dataproc_bq.py)
+* Note that while the example in the course repo indicates the "--jars" verision, this caused a problem for me and solved itself when ommiting this parameter
+
+```
+gcloud dataproc jobs submit pyspark \
+    --cluster=cluster-de-zoomcamp \
+    --region=europe-west1 \
+    gs://datalake_ny_taxi_de-zoomcamp/code/11_spark_dataproc_bq.py \
+    -- \
+        --input_green=gs://datalake_ny_taxi_de-zoomcamp/pq/green/2020/*/ \
+        --input_yellow=gs://datalake_ny_taxi_de-zoomcamp/pq/yellow/2020/*/ \
+        --output=zoomcamp_prod.reports-2020
+``` 
