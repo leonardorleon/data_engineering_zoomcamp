@@ -154,3 +154,39 @@ The way that it works is the following, we have records in both yellow and green
 Now, similarly to the group by reduce, we are placing together records with the same keys, since we are doing an outer join, if one of the tables doesn't have values for that key, it'll simply show null. But if we're doing an inner join, they would just not show up. So the reducing will be different according to the join. This particular step is called sortMergeJoin in the DAG from spark. 
 
 Another thing to point out, as can be seen on the notebook where the join was done with the zones table, is that there was a step called BroadcastExchange which was not in previous joins or groupby. This is because we are joining to a small table. What happens in these cases is that instead of doing the merge sort join, each executor gets a copy of the zones dataset, since it is so small. The join happens on each executor without the need to shuffle any data. 
+
+# Resilient Distributed Datasets
+
+So far we've worked through pyspark, so the RDDs have been abstracted away from us, but in the background these have been working to complete the tasks. So let's take a look at what they are and how they work. 
+
+RDDs are a distributed dataset, they are divided in partitions and various executors can work on the different partitions to process its contents in parallel.
+
+## Group by in RDDs
+
+A group by in rdds is a combination of map and reduce actions. So firs you have to map the data so that it follows a (key,value) format, and then you need to use a reduce function to go from those key value pairs into "reduced key value" pairs. So the key will remain, but after the operation, there will only be one record with that key and the reduced value.
+
+This can be seen in the code in [](code/09_rdds.ipynb)
+
+in the code, we had to prepare a few python functions to serve as the guide on how to perform the operations, but in a more general sense, the following steps were taken:
+
+```
+df_result = rdd \
+    .filter(filter_outliers) \
+    .map(prepare_for_grouping) \
+    .reduceByKey(calculate_revenue) \
+    .map(unwrap) \
+    .toDF(result_schema)
+```
+
+* first we apply a filter, passing the function explaining how it should be done
+* then we perform a mapping, passing a function that sets the data in key,value pairs. In the case the key is a tuple and so is the value
+* after mapping, a reduceByKey is used, where we pass a function that shows how the values should be aggregated. So it will pass to executors the records with the same keys, and then it will pass two records together, which in the function we unpack and aggregate the values to then return a tuple of the aggregated values. Then it will grab this aggregated row and apply the same function with the next row of the same key until it's left with a single row for that key containing the aggregated values of all of the rows with the same key
+* After reducing, we need to apply another map function, this time to unpack the values. So we simply unpack the key tuple and the value tuple into a single tuple describing the whole row. If you'd like to retain column names, you can use a namedTuple.
+* Lastly, if the schema is not passed along, it will execute and try to infer the schema. Though you can prepare a schema manually and pass it to the "toDF" function. In such case, it will not execute immediately since it doesn't need to infer the schema, but it will wait until an action like "show()" to perform the tasks. 
+
+This is what the whole operation would look like in the spark DAG:
+
+![](images/09_rdd_mapreduce.png)
+
+There are two stages, because it first does the mapping and then it needs to ensure all the values with the same keys are in the same partitions. After that it needs to reshuffle, and proceed with the second stage, where it performs the rest of the operations. 
+
