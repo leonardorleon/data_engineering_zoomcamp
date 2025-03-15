@@ -11,14 +11,15 @@ admin_client = KafkaAdminClient(
 
 if __name__ == '__main__':
     '''
-    Simple python script to use the kafka admin client to list or describe topics.
+    Simple python script to use the kafka admin client to handle administrative tasks on topics.
 
     Kafka admin is not able to read the contents of the topic, so it's only administrative info in this case.
     '''
     parser = ArgumentParser()
 
-    parser.add_argument("--topic", help="Topic name to describe")
+    parser.add_argument("--topic", nargs='+' , help="Topic name to describe")
     parser.add_argument("--list", help="List all topics", action="store_true")
+    parser.add_argument("--delete_topics", nargs='+', help="Delete topics from the cluster")
 
     args = parser.parse_args()
 
@@ -26,6 +27,9 @@ if __name__ == '__main__':
         topic_description = admin_client.describe_topics(args.topic)
         print(json.dumps(topic_description, indent=2))
     elif args.list:
-        admin_client.list_topics()
+        print(admin_client.list_topics())
+    elif args.delete_topics:
+        admin_client.delete_topics(args.delete_topics)
+        print(f"Deleted topics: {args.delete_topics}")
     else:
         print(parser.print_help())    

@@ -155,3 +155,8 @@ Like in the previous job, let's create a table in postgres called `processed_eve
 The main difference in this job is that we'll be aggregating the data. In this case is done through the sql shown in the main `log_aggregation` code. It uses a watermark to provide some extra reliability, basically it allows for some late arriving records to be able to be pulled in to the correct group by set of data. The watermark is set in the source table set up as `event_watermark`, and then it is used in the insert into code by a `TUMBLE` over this watermark. 
 
 I had to make some changes from the code in the original repo, since the original repo code didn't seem to aggregate properly as it included the test_data field in the group by which and it is the field with the highest granularity.
+
+
+### Notes from homework exercises
+
+Some things that I found while doing the homework exercises is that sometimes you might want to manage the topics or check on their contents so you can properly prepare the source or sink in your jobs. For this, I created some simple utility scripts which allow to list or describe topics: [kafka_admin.py](pyflink/src/homework/kafka_admin.py) and another one to consume a few messages from a topic to check it's contents: [kafka_consumer.py](pyflink/src/homework/kafka_consumer.py).
